@@ -161,7 +161,7 @@ class ObserverDriver(weewx.drivers.AbstractDevice):
                 logdbg('empty queue')
 
 
-class ListenThread():
+class ListenThread(threading.Thread):
 
     def __init__(self, listener, queue):
         threading.Thread.__init__(self)
@@ -257,7 +257,7 @@ class Observer(object):
             conn.close()
 
     @staticmethod
-    def send_broadcast(self):
+    def send_broadcast():
         # broadcast a udp message
         addr = '255.255.255.255' # <broadcast>
         port = Observer.BROADCAST_PORT
