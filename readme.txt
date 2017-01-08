@@ -1,4 +1,6 @@
 weewx-observer
+Copyright Matthew Wall, all rights reserved
+Distributed under terms of the GPLv3
 
 This is a driver for weewx that captures data by polling an observer weather
 station over wifi.
