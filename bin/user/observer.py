@@ -31,7 +31,7 @@ import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'Observer'
-DRIVER_VERSION = '0.2'
+DRIVER_VERSION = '0.2p1'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'observer: %s: %s' %
