@@ -31,7 +31,7 @@ import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'Observer'
-DRIVER_VERSION = '0.2p2'
+DRIVER_VERSION = '0.2p3'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'observer: %s: %s' %
@@ -233,17 +233,27 @@ class Observer(object):
                 self.setup()
                 self.send_broadcast()
                 while self._running:
-                    for data in self.get_data():
-                        if data is not None:
-                            queue.put(data)
-                        if not self._running:
-                            break
+                    conn = None
+                    try:
+                        conn, addr = self.sock.accept()
+                        logdbg("got connection from %s" % addr)
+                        for data in self.get_data(conn):
+                            if data is not None:
+                                queue.put(data)
+                            if not self._running:
+                                break
+                    except socket.timeout:
+                        logdbg("timeout on accept")
+                    finally:
+                        if conn is not None:
+                            conn.close()
             except socket.error, e:
                 logerr("socket failure: %s" % e)
             self.teardown()
+            logdbg("waiting 5 seconds before trying again")
             time.sleep(5)
 
-    def get_data(self):
+    def get_data(self, conn):
         # when we get a connection, query the client over the socket for data.
         # when we get the data, yield it.  if the socket fails for any reason,
         # fall back to listening.
@@ -251,27 +261,18 @@ class Observer(object):
         # this is implemented as a generator, so the caller can simply loop on
         # the data that this method receives.  when data is none, the caller
         # can bail out, or re-invoke this method to start the process over.
-        conn = None
-        try:
-            conn, addr = self.sock.accept()
-            logdbg("got connection from %s" % addr)
-            while True:
-                try:
-                    logdbg("sending query to %s" % addr)
-                    conn.send(Observer.QUERY_MSG)
-                    data = conn.recv(Observer.MAX_DATA)
-                    logdbg("received data from %s: %s" % (raddr, _fmt(data)))
-                    yield data
-                    time.sleep(self.poll_interval)
-                except socket.timeout:
-                    logdbg("timeout while querying/receiving")
-                    yield None
-        except socket.error, e:
-            logdbg("get_data fail: %s" % e)
-            raise
-        finally:
-            if conn is not None:
-                conn.close()
+        while True:
+            try:
+                logdbg("sending query to %s" % addr)
+                conn.send(Observer.QUERY_MSG)
+                data = conn.recv(Observer.MAX_DATA)
+                logdbg("received data from %s: %s" % (raddr, _fmt(data)))
+                yield data
+                time.sleep(self.poll_interval)
+            except socket.timeout:
+                # FIXME: might need to bail out here if too many timeouts
+                logdbg("timeout while querying/receiving")
+                yield None
 
     @staticmethod
     def send_broadcast():
