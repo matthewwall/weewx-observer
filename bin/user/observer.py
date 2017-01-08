@@ -263,7 +263,7 @@ class Observer(object):
         # can bail out, or re-invoke this method to start the process over.
         while True:
             try:
-                logdbg("sending query to %s" % addr)
+                logdbg("sending query")
                 conn.send(Observer.QUERY_MSG)
                 data = conn.recv(Observer.MAX_DATA)
                 logdbg("received data from %s: %s" % (raddr, _fmt(data)))
