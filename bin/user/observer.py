@@ -263,7 +263,8 @@ class Observer(object):
         except socket.error:
             raise
         finally:
-            conn.close()
+            if conn is not None:
+                conn.close()
 
     @staticmethod
     def send_broadcast():
