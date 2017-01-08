@@ -359,6 +359,7 @@ if __name__ == '__main__':
             print Observer.decode_data(data)
             exit(0)
 
+        print "driver version %s" % DRIVER_VERSION
         print "listen on %s:%s" % (options.host, options.port)
         station = Observer(options.host, options.port)
         queue = Queue.Queue()
