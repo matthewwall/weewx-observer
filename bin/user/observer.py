@@ -18,6 +18,9 @@ PERL and published 16dec2016:
   http://www.wxforum.net/index.php?topic=30471
 """
 
+# FIXME: get more search and query string samples
+# FIXME: get raw data packets so we can do proper decoding
+
 import Queue
 import socket
 import syslog
@@ -28,7 +31,7 @@ import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'Observer'
-DRIVER_VERSION = '0.1'
+DRIVER_VERSION = '0.2'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'observer: %s: %s' %
@@ -112,17 +115,21 @@ class ObserverDriver(weewx.drivers.AbstractDevice):
         'radiation': 'solar_radiation'}
 
     def __init__(self, **stn_dict):
+        loginf("driver version is %s" % DRIVER_VERSION)
+        self.model = stn_dict.get('model', 'WS1001')
+        loginf("model is %s" % self.model)
+        self.sensor_map = stn_dict.get(
+            'sensor_map', ObserverDriver.DEFAULT_MAP)
+        loginf("sensor map is %s" % self.sensor_map)
         host = stn_dict.get('host', '')
         port = int(stn_dict.get('port', Observer.DEFAULT_LISTEN_PORT))
         loginf("driver will listen on %s:%s" % (host, port))
         poll_interval = int(stn_dict.get('poll_interval', 10))
         loginf("poll interval is %s" % poll_interval)
-        self.model = stn_dict.get('model', 'WS1001')
         timeout = int(stn_dict.get('timeout', 15))
+        loginf("network timeout is %ss" % timeout)
         self.max_tries = int(stn_dict.get('max_tries', 3))
         self.retry_wait = int(stn_dict.get('retry_wait', 5))
-        self.sensor_map = stn_dict.get(
-            'sensor_map', ObserverDriver.DEFAULT_MAP)
         self._station = Observer(host, port, poll_interval, timeout)
         self._queue = Queue.Queue()
         self._thread = None
@@ -143,6 +150,8 @@ class ObserverDriver(weewx.drivers.AbstractDevice):
             self._thread = None
 
     def genLoopPackets(self):
+        # loop forever waiting for data from the queue.  when we find something
+        # on the queue, decode it into a packet, then yield the packet.
         while True:
             try:
                 data = self._queue.get(True, 10)
@@ -155,13 +164,14 @@ class ObserverDriver(weewx.drivers.AbstractDevice):
                         packet[k] = pkt[self.sensor_map[k]]
                 logdbg("mapped packet: %s" % packet)
                 yield packet
-                if self.poll_interval:
-                    time.sleep(self.poll_interval)
             except Queue.Empty:
                 logdbg('empty queue')
 
 
 class ListenThread(threading.Thread):
+    # this thread runs the network code that communicates with the station.
+    # it provides the queue on which data are placed, as well as the mechanism
+    # to start/stop the network operations.
 
     def __init__(self, listener, queue):
         threading.Thread.__init__(self)
@@ -179,7 +189,6 @@ class ListenThread(threading.Thread):
 class Observer(object):
 
     DEFAULT_LISTEN_PORT = 6500
-
     MAX_DATA = 1024
     BROADCAST_PORT = 6000
     SEARCH_MSG = 'PC2000\x00\x00SEARCH\x00\x00\x00\xcd\xfd\x94,\xfb\xe3\x0b\x0c\xfb\xe3\x0bP\xab\xa5w\x00\x00\x00\x00\x00\xdd\xbfw'
@@ -337,8 +346,7 @@ if __name__ == '__main__':
             data = ''
             with open(options.filename, "r") as f:
                 data = f.read()
-            packet = Observer.decode_data(data)
-            print packet
+            print Observer.decode_data(data)
             exit(0)
 
         print "listen on %s:%s" % (options.host, options.port)

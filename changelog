@@ -1,2 +1,6 @@
+0.2 08jan2017
+* provide more feedback during startup
+* push poll interval to socket code
+
 0.1 06jan2017
 * initial release

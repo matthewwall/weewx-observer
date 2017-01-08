@@ -9,7 +9,7 @@ def loader():
 class ObserverInstaller(ExtensionInstaller):
     def __init__(self):
         super(ObserverInstaller, self).__init__(
-            version="0.1",
+            version="0.2",
             name='observer',
             description='Capture data from observer weather station',
             author="Matthew Wall",
