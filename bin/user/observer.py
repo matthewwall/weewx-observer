@@ -266,7 +266,7 @@ class Observer(object):
                 logdbg("sending query")
                 conn.send(Observer.QUERY_MSG)
                 data = conn.recv(Observer.MAX_DATA)
-                logdbg("received data from %s: %s" % (raddr, _fmt(data)))
+                logdbg("received data: %s" % _fmt(data))
                 yield data
                 time.sleep(self.poll_interval)
             except socket.timeout:
