@@ -180,9 +180,11 @@ class ListenThread(threading.Thread):
         self._queue = queue
 
     def stop_running(self):
+        logdbg("stop thread")
         self._listener._running = False
 
     def run(self):
+        logdbg("run thread")
         self._listener.run(self._queue)
 
 
@@ -371,10 +373,11 @@ if __name__ == '__main__':
                 print "raw data:", _fmt(data)
                 pkt = Observer.decode_data(data)
                 print "raw packet:", pkt
-                time.sleep(10)
+                time.sleep(5)
             except Queue.Empty:
                 pass
             except KeyboardInterrupt:
+                print "keyboard interrupt, shutting down"
                 t.stop_running()
                 break
         t.join()
