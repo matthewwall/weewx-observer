@@ -207,16 +207,20 @@ class Observer(object):
         # create a socket server that listens for connections.
         if self.sock is None:
             try:
+                logdbg("create socket")
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self.sock.settimeout(self.timeout)
+                logdbg("bind socket")
                 self.sock.bind((self.host, self.port))
-            except socket.error:
+            except socket.error, e:
+                logdbg("socket setup failed: %s" % e)
                 self.sock = None
 
     def teardown(self):
         # shut down the socket server.
         if self.sock is not None:
+            logdbg("close socket")
             self.sock.close()
             self.sock = None
 
@@ -260,7 +264,8 @@ class Observer(object):
                 except socket.timeout:
                     logdbg("timeout while querying/receiving")
                     yield None
-        except socket.error:
+        except socket.error, e:
+            logdbg("get_data fail: %s" % e)
             raise
         finally:
             if conn is not None:
@@ -271,9 +276,12 @@ class Observer(object):
         # broadcast a udp message
         addr = '255.255.255.255' # <broadcast>
         port = Observer.BROADCAST_PORT
+        logdbg("broadcast to %s:%s" % (host, port))
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        logdbg("broadcast search message: %s" % _fmt(Observer.SEARCH_MSG))
         s.sendto(Observer.SEARCH_MSG, (addr, port))
+        logdbg("close broadcast socket")
         s.close()
 
     @staticmethod
@@ -304,6 +312,7 @@ class Observer(object):
         # 23                                      luminosity lux
         # 24 C2: 2 8-bit unsigned char            uv
         # 45
+        logdbg("decode data: %s" % _fmt(data))
         pkt = dict()
         try:
             pkt['debug'] = None # placeholder
