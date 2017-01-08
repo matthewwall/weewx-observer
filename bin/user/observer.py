@@ -31,7 +31,7 @@ import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'Observer'
-DRIVER_VERSION = '0.2p1'
+DRIVER_VERSION = '0.2p2'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'observer: %s: %s' %
@@ -278,7 +278,7 @@ class Observer(object):
         # broadcast a udp message
         addr = '255.255.255.255' # <broadcast>
         port = Observer.BROADCAST_PORT
-        logdbg("broadcast to %s:%s" % (host, port))
+        logdbg("broadcast to %s:%s" % (addr, port))
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         logdbg("broadcast search message: %s" % _fmt(Observer.SEARCH_MSG))
