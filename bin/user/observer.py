@@ -32,7 +32,7 @@ import weewx
 import weewx.drivers
 
 DRIVER_NAME = 'Observer'
-DRIVER_VERSION = '0.2p3'
+DRIVER_VERSION = '0.2p4'
 
 def logmsg(dst, msg):
     syslog.syslog(dst, 'observer: %s: %s' %
@@ -52,7 +52,7 @@ def logerr(msg):
 
 
 def loader(config_dict, engine):
-    return Observer(**config_dict[DRIVER_NAME])
+    return ObserverDriver(**config_dict[DRIVER_NAME])
 
 def configurator_loader(config_dict):
     return ObserverConfigurator()
